@@ -26,6 +26,26 @@ const typeLabel = (t) => ({
   other: "その他",
 }[t] || t);
 
+function normalizeHex(input) {
+  const s = (input || "").trim();
+  if (!s) return "";
+  const t = s.startsWith("#") ? s.slice(1) : s;
+  if (!/^[0-9a-fA-F]{6}$/.test(t)) return "__INVALID__";
+  return ("#" + t.toUpperCase());
+}
+
+function setHexPreview(hex) {
+  const el = $("hexPreview");
+  if (!el) return;
+  if (!hex || hex === "__INVALID__") {
+    el.style.background = "rgba(255,255,255,.06)";
+    el.style.borderColor = "var(--line)";
+    return;
+  }
+  el.style.background = hex;
+  el.style.borderColor = "rgba(255,255,255,.22)";
+}
+
 // ---------- IndexedDB ----------
 const DB_NAME = "paint-manager-db";
 const DB_VERSION = 1;
@@ -227,6 +247,8 @@ function resetForm() {
 
   $("btnCancelEdit").hidden = true;
   $("btnSave").textContent = "保存";
+  $("hex").value = "";
+  setHexPreview("");
 }
 
 function fillForm(p) {
@@ -244,6 +266,8 @@ function fillForm(p) {
   $("btnCancelEdit").hidden = false;
   $("btnSave").textContent = "更新";
   window.scrollTo({ top: 0, behavior: "smooth" });
+  $("hex").value = p.hex || "";
+  setHexPreview(p.hex || "");
 }
 
 function readForm() {
@@ -256,6 +280,7 @@ function readForm() {
     status: $("status").value,
     tags: normalizeTags($("tags").value),
     notes: $("notes").value.trim(),
+    hex: normalizeHex($("hex").value),
   };
 }
 
@@ -322,6 +347,7 @@ async function importJSON(file, mode) {
         notes: p.notes || "",
         createdAt: p.createdAt || nowISO(),
         updatedAt: p.updatedAt || nowISO(),
+        hex: (normalizeHex(p.hex) === "__INVALID__") ? "" : (normalizeHex(p.hex) || ""),
       };
 
       if (typeof clean.id === "number") {
@@ -364,6 +390,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("paintForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const data = readForm();
+    if (data.hex === "__INVALID__") {
+    alert("HEXは #RRGGBB（例: #1A2B3C）の形式で入力してね。");
+    return;
+    }
     if (!data.name) return;
 
     if (editingId) {
@@ -374,6 +404,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await reload();
     resetForm();
+     $("hex").value = "";
+     setHexPreview("");
+    
   });
 
   $("btnCancelEdit").addEventListener("click", () => resetForm());
@@ -417,5 +450,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     e.target.value = "";
     if (!file) return;
     await importJSON(file, "replace");
+  });
+  
+  $("hex").addEventListener("input", () => {
+    const h = normalizeHex($("hex").value);
+    setHexPreview(h);
   });
 });
