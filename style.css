@@ -1,0 +1,130 @@
+:root {
+  --bg: #0b0b0f;
+  --panel: #141421;
+  --text: #f3f3f5;
+  --muted: #b6b6c4;
+  --line: #2a2a3a;
+  --primary: #5bd6ff;
+  --danger: #ff5b6e;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 20% 0%, #111127, #07070c);
+  color: var(--text);
+  font-family: -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans JP", "Hiragino Sans", "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(10,10,16,.72);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header__title h1 { margin: 0; font-size: 18px; }
+.header__title p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+.header__actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+.container { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+
+.panel {
+  background: rgba(20,20,33,.86);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.panel__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.panel h2 { margin: 0 0 12px; font-size: 16px; }
+
+.form .grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+label { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+input, select, textarea {
+  width: 100%;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(10,10,18,.9);
+  color: var(--text);
+  outline: none;
+}
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); box-shadow: 0 0 0 3px rgba(91,214,255,.15); }
+
+.span-2 { grid-column: span 2; }
+
+.form__actions { margin-top: 10px; display: flex; gap: 10px; }
+
+.btn {
+  border: 1px solid var(--line);
+  background: rgba(20,20,33,.9);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+.btn:active { transform: translateY(1px); }
+.btn--primary { border-color: rgba(91,214,255,.45); background: rgba(91,214,255,.12); }
+.btn--ghost { background: transparent; }
+.btn--danger { border-color: rgba(255,91,110,.5); background: rgba(255,91,110,.12); }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
+.filters input { min-width: 220px; flex: 1; }
+.filters select { min-width: 160px; }
+
+.stats {
+  margin: 10px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(10,10,18,.85);
+}
+.card__top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.card__title { margin: 0; font-size: 15px; }
+.badge { font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.badge--owned { border-color: rgba(91,214,255,.4); color: rgba(91,214,255,.95); }
+.badge--empty { border-color: rgba(255,205,91,.4); color: rgba(255,205,91,.95); }
+.badge--wishlist { border-color: rgba(255,91,110,.45); color: rgba(255,91,110,.95); }
+
+.card__meta { margin: 6px 0 0; color: var(--muted); font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+.card__notes { margin: 8px 0 0; color: var(--text); opacity: .92; font-size: 13px; white-space: pre-wrap; }
+.card__tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 12px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--muted); }
+
+.card__actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.empty { color: var(--muted); padding: 16px 0; text-align: center; }
+
+.footer { text-align: center; color: var(--muted); padding: 8px 0 18px; }
+
+@media (max-width: 640px) {
+  .form .grid { grid-template-columns: 1fr; }
+  .span-2 { grid-column: span 1; }
+}
