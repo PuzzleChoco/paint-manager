@@ -196,6 +196,7 @@ function render() {
       <div class="card__top">
         <div>
           <h3 class="card__title">${escapeHtml(p.name || "")}</h3>
+          ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
           <div class="card__meta">
             <span>${escapeHtml(p.brand || "メーカー未設定")}</span>
             ${p.line ? `<span>${escapeHtml(p.line)}</span>` : ""}
