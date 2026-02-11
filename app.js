@@ -254,8 +254,6 @@ function render() {
       <div class="card__top">
         <div>
           <div class="titleRow">
-            ${p.photoDataUrl ? `<img class="photoPreview" src="${p.photoDataUrl}" alt="swatch" />` : ""}
-            ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
             
             <div class="cardTitleRow">
               ${
@@ -548,9 +546,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("hex").addEventListener("input", () => {
     const h = normalizeHex($("hex").value);
     setHexPreview(h);
-    
-  $("btnTakePhoto").addEventListener("click", () => {
-  $("photoInput").click();
   });
 
   // --- Photo pickers (camera / library) ---
@@ -559,8 +554,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const dataUrl = await fileToResizedDataURL(file, { maxSize: 900, quality: 0.82 });
     currentPhotoDataUrl = dataUrl;
-
-    // iOSだと汎用名のこともあるけど、取れる範囲で表示
     currentPhotoName = file.name || "";
 
     setPhotoPreview(currentPhotoDataUrl);
@@ -574,7 +567,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (cam) {
     cam.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
-      e.target.value = ""; // 同じ写真を選び直せるように必ずリセット
+      e.target.value = "";
       try { await handlePickedPhoto(file); } catch (err) {
         console.warn(err);
         alert("画像の読み込みに失敗したかも。別の写真で試してね。");
@@ -597,15 +590,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnRemove.addEventListener("click", () => {
       const ok = confirm("塗り見本の写真を削除する？");
       if (!ok) return;
-
       currentPhotoDataUrl = "";
       currentPhotoName = "";
       setPhotoPreview("");
       setPhotoName("");
-
       if (cam) cam.value = "";
       if (lib) lib.value = "";
     });
   }
-  });
+  
 });
