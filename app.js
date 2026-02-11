@@ -88,6 +88,20 @@ function setPhotoPreview(dataUrl) {
   btnRemove.hidden = false;
 }
 
+function setPhotoName(name) {
+  const el = $("photoName");
+  if (!el) return;
+
+  const v = (name || "").trim();
+  if (!v) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  el.hidden = false;
+  el.textContent = v;
+}
+
 // ---------- IndexedDB ----------
 const DB_NAME = "paint-manager-db";
 const DB_VERSION = 1;
@@ -178,6 +192,7 @@ async function clearAll() {
 let paints = [];
 let editingId = null;
 let currentPhotoDataUrl = "";
+let currentPhotoName = "";
 
 // ---------- render ----------
 function matchesQuery(p, q) {
@@ -241,17 +256,30 @@ function render() {
           <div class="titleRow">
             ${p.photoDataUrl ? `<img class="photoPreview" src="${p.photoDataUrl}" alt="swatch" />` : ""}
             ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
-            <h3 class="card__title">${escapeHtml(p.name || "")}</h3>
+            <div class="cardTitleRow">
+              ${
+                p.photoDataUrl
+                  ? `<img class="cardThumb" src="${p.photoDataUrl}" alt="swatch" />`
+                  : (p.hex
+                      ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>`
+                      : `<span class="swatch"></span>`
+                    )
+              }
+              <div>
+                <h3 class="card__title">${escapeHtml(p.name || "")}</h3>
+                <div class="card__meta">
+                  <span>${escapeHtml(p.brand || "メーカー未設定")}</span>
+                  ${p.line ? `<span>${escapeHtml(p.line)}</span>` : ""}
+                  ${p.code ? `<span>#${escapeHtml(p.code)}</span>` : ""}
+                  <span>${escapeHtml(typeLabel(p.type))}</span>
+                  ${p.photoName ? `<span>📷 ${escapeHtml(p.photoName)}</span>` : ""}
+                </div>
+              </div>
+            </div>
           </div>
             
           </h3>
           
-          <div class="card__meta">
-            <span>${escapeHtml(p.brand || "メーカー未設定")}</span>
-            ${p.line ? `<span>${escapeHtml(p.line)}</span>` : ""}
-            ${p.code ? `<span>#${escapeHtml(p.code)}</span>` : ""}
-            <span>${escapeHtml(typeLabel(p.type))}</span>
-          </div>
         </div>
         <span class="badge ${badgeClass}">${escapeHtml(statusLabel(p.status))}</span>
       </div>
@@ -301,6 +329,9 @@ function resetForm() {
   setHexPreview("");
   currentPhotoDataUrl = "";
   setPhotoPreview("");
+  
+  currentPhotoName = "";
+  setPhotoName("");
 }
 
 function fillForm(p) {
@@ -322,6 +353,9 @@ function fillForm(p) {
   setHexPreview(p.hex || "");
   currentPhotoDataUrl = p.photoDataUrl || "";
   setPhotoPreview(currentPhotoDataUrl);
+  
+  currentPhotoName = p.photoName || "";
+  setPhotoName(currentPhotoName);
 }
 
 function readForm() {
@@ -336,6 +370,7 @@ function readForm() {
     notes: $("notes").value.trim(),
     hex: normalizeHex($("hex").value),
     photoDataUrl: currentPhotoDataUrl || "",
+    photoName: currentPhotoName || "",
   };
 }
 
@@ -404,6 +439,7 @@ async function importJSON(file, mode) {
         updatedAt: p.updatedAt || nowISO(),
         hex: (normalizeHex(p.hex) === "__INVALID__") ? "" : (normalizeHex(p.hex) || ""),
         photoDataUrl: typeof p.photoDataUrl === "string" ? p.photoDataUrl : "",
+        photoName: typeof p.photoName === "string" ? p.photoName : "",
       };
 
       if (typeof clean.id === "number") {
@@ -521,6 +557,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const dataUrl = await fileToResizedDataURL(file, { maxSize: 900, quality: 0.82 });
       currentPhotoDataUrl = dataUrl;
+
+      // iOSだと汎用名になることもあるけど、取れる範囲で表示＆保存する
+      currentPhotoName = file.name || "";
+      setPhotoName(currentPhotoName);
+
       setPhotoPreview(currentPhotoDataUrl);
     } catch (err) {
       console.warn(err);
@@ -547,7 +588,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 保存データを消す
     currentPhotoDataUrl = "";
+    currentPhotoName = "";
     setPhotoPreview("");
+    setPhotoName("");
 
     // input もリセット（UI上の「ファイルを選択」状態を消す）
     const cam = $("photoInputCamera");

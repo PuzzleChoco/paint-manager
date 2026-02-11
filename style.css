@@ -193,3 +193,32 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
   overflow: hidden;
   pointer-events: none;
 }
+
+.photoName {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(10,10,18,.7);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  object-fit: cover;
+  background: rgba(255,255,255,.06);
+  flex: 0 0 auto;
+}
+
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
