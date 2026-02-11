@@ -73,20 +73,32 @@
           <label class="span-2">
             塗り見本（写真）
             <div class="photoRow">
-               <button type="button" id="btnTakePhoto" class="btn btn--ghost">撮影/選択</button>
-               <button type="button" id="btnRemovePhoto" class="btn btn--danger" hidden>削除</button>
+              <label class="btn btn--ghost">
+                撮影
+                <input
+                  id="photoInputCamera"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  class="fileInput"
+                />
+              </label>
 
-               <input
-                 id="photoInput"
-                 type="file"
-                 accept="image/*"
-                 capture="environment"
-                 class="fileInput"
-               />
+              <label class="btn btn--ghost">
+                写真を選ぶ
+                <input
+                  id="photoInputLibrary"
+                  type="file"
+                  accept="image/*"
+                  class="fileInput"
+                />
+              </label>
 
-                <img id="photoPreview" class="photoPreview" alt="swatch preview" hidden />
-              </div>
-              <small class="hint">※撮影した画像は端末内に保存（同期なし）。バックアップにも入ります。</small>
+              <button type="button" id="btnRemovePhoto" class="btn btn--danger" hidden>削除</button>
+
+              <img id="photoPreview" class="photoPreview" alt="swatch preview" hidden />
+            </div>
+            <small class="hint">※端末内に保存（同期なし）。バックアップにも入ります。</small>
           </label>
 
           <label>

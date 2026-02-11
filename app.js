@@ -516,11 +516,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("photoInput").click();
   });
 
-  $("photoInput").addEventListener("change", async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  async function handlePickedPhoto(file) {
     if (!file) return;
-
     try {
       const dataUrl = await fileToResizedDataURL(file, { maxSize: 900, quality: 0.82 });
       currentPhotoDataUrl = dataUrl;
@@ -529,13 +526,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.warn(err);
       alert("画像の読み込みに失敗したかも。別の写真で試してね。");
     }
+  }
+
+  $("photoInputCamera").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    // 同じファイルを連続で選べるように、必ずリセット
+    e.target.value = "";
+    await handlePickedPhoto(file);
+  });
+
+  $("photoInputLibrary").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    await handlePickedPhoto(file);
   });
 
   $("btnRemovePhoto").addEventListener("click", () => {
     const ok = confirm("塗り見本の写真を削除する？");
     if (!ok) return;
+
+    // 保存データを消す
     currentPhotoDataUrl = "";
     setPhotoPreview("");
+
+    // input もリセット（UI上の「ファイルを選択」状態を消す）
+    const cam = $("photoInputCamera");
+    const lib = $("photoInputLibrary");
+    if (cam) cam.value = "";
+    if (lib) lib.value = "";
   });
   });
 });
