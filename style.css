@@ -133,6 +133,12 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
   .span-2 { grid-column: span 1; }
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .hexrow {
   display: flex;
   gap: 10px;
@@ -140,6 +146,7 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
 }
 
 .swatch {
+  display: inline-block;
   width: 40px;
   height: 40px;
   border-radius: 10px;
