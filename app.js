@@ -256,6 +256,7 @@ function render() {
           <div class="titleRow">
             ${p.photoDataUrl ? `<img class="photoPreview" src="${p.photoDataUrl}" alt="swatch" />` : ""}
             ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
+            
             <div class="cardTitleRow">
               ${
                 p.photoDataUrl
@@ -269,13 +270,13 @@ function render() {
                 <h3 class="card__title">${escapeHtml(p.name || "")}</h3>
                 <div class="card__meta">
                   <span>${escapeHtml(p.brand || "メーカー未設定")}</span>
-                  ${p.line ? `<span>${escapeHtml(p.line)}</span>` : ""}
                   ${p.code ? `<span>#${escapeHtml(p.code)}</span>` : ""}
                   <span>${escapeHtml(typeLabel(p.type))}</span>
                   ${p.photoName ? `<span>📷 ${escapeHtml(p.photoName)}</span>` : ""}
                 </div>
               </div>
             </div>
+            
           </div>
             
           </h3>
@@ -552,51 +553,59 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("photoInput").click();
   });
 
+  // --- Photo pickers (camera / library) ---
   async function handlePickedPhoto(file) {
     if (!file) return;
-    try {
-      const dataUrl = await fileToResizedDataURL(file, { maxSize: 900, quality: 0.82 });
-      currentPhotoDataUrl = dataUrl;
 
-      // iOSだと汎用名になることもあるけど、取れる範囲で表示＆保存する
-      currentPhotoName = file.name || "";
-      setPhotoName(currentPhotoName);
+    const dataUrl = await fileToResizedDataURL(file, { maxSize: 900, quality: 0.82 });
+    currentPhotoDataUrl = dataUrl;
 
-      setPhotoPreview(currentPhotoDataUrl);
-    } catch (err) {
-      console.warn(err);
-      alert("画像の読み込みに失敗したかも。別の写真で試してね。");
-    }
+    // iOSだと汎用名のこともあるけど、取れる範囲で表示
+    currentPhotoName = file.name || "";
+
+    setPhotoPreview(currentPhotoDataUrl);
+    setPhotoName(currentPhotoName);
   }
 
-  $("photoInputCamera").addEventListener("change", async (e) => {
-    const file = e.target.files?.[0];
-    // 同じファイルを連続で選べるように、必ずリセット
-    e.target.value = "";
-    await handlePickedPhoto(file);
-  });
+  const cam = $("photoInputCamera");
+  const lib = $("photoInputLibrary");
+  const btnRemove = $("btnRemovePhoto");
 
-  $("photoInputLibrary").addEventListener("change", async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    await handlePickedPhoto(file);
-  });
+  if (cam) {
+    cam.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = ""; // 同じ写真を選び直せるように必ずリセット
+      try { await handlePickedPhoto(file); } catch (err) {
+        console.warn(err);
+        alert("画像の読み込みに失敗したかも。別の写真で試してね。");
+      }
+    });
+  }
 
-  $("btnRemovePhoto").addEventListener("click", () => {
-    const ok = confirm("塗り見本の写真を削除する？");
-    if (!ok) return;
+  if (lib) {
+    lib.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      try { await handlePickedPhoto(file); } catch (err) {
+        console.warn(err);
+        alert("画像の読み込みに失敗したかも。別の写真で試してね。");
+      }
+    });
+  }
 
-    // 保存データを消す
-    currentPhotoDataUrl = "";
-    currentPhotoName = "";
-    setPhotoPreview("");
-    setPhotoName("");
+  if (btnRemove) {
+    btnRemove.addEventListener("click", () => {
+      const ok = confirm("塗り見本の写真を削除する？");
+      if (!ok) return;
 
-    // input もリセット（UI上の「ファイルを選択」状態を消す）
-    const cam = $("photoInputCamera");
-    const lib = $("photoInputLibrary");
-    if (cam) cam.value = "";
-    if (lib) lib.value = "";
-  });
+      currentPhotoDataUrl = "";
+      currentPhotoName = "";
+      setPhotoPreview("");
+      setPhotoName("");
+
+      if (cam) cam.value = "";
+      if (lib) lib.value = "";
+    });
+  }
   });
 });
