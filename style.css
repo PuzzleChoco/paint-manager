@@ -154,3 +154,27 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
   background: rgba(255,255,255,.06);
   flex: 0 0 auto;
 }
+
+.photoRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.photoPreview {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  object-fit: cover;
+  background: rgba(255,255,255,.06);
+}
+
+.hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
