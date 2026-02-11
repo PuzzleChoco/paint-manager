@@ -195,8 +195,9 @@ function render() {
     li.innerHTML = `
       <div class="card__top">
         <div>
+          ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
           <h3 class="card__title">${escapeHtml(p.name || "")}
-            ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
+            
           </h3>
           
           <div class="card__meta">
