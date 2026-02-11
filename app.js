@@ -46,6 +46,48 @@ function setHexPreview(hex) {
   el.style.borderColor = "rgba(255,255,255,.22)";
 }
 
+async function fileToResizedDataURL(file, { maxSize = 900, quality = 0.82 } = {}) {
+  // 画像を読み込み
+  const img = await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => { URL.revokeObjectURL(url); resolve(im); };
+    im.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+    im.src = url;
+  });
+
+  // 端末向けに縮小（長辺 maxSize）
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  const scale = Math.min(1, maxSize / Math.max(w, h));
+  const nw = Math.max(1, Math.round(w * scale));
+  const nh = Math.max(1, Math.round(h * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = nw;
+  canvas.height = nh;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, nw, nh);
+
+  // JPEGにして容量を抑える（バックアップにも入れやすい）
+  return canvas.toDataURL("image/jpeg", quality);
+}
+
+function setPhotoPreview(dataUrl) {
+  const img = $("photoPreview");
+  const btnRemove = $("btnRemovePhoto");
+
+  if (!dataUrl) {
+    img.hidden = true;
+    img.src = "";
+    btnRemove.hidden = true;
+    return;
+  }
+  img.hidden = false;
+  img.src = dataUrl;
+  btnRemove.hidden = false;
+}
+
 // ---------- IndexedDB ----------
 const DB_NAME = "paint-manager-db";
 const DB_VERSION = 1;
@@ -135,6 +177,7 @@ async function clearAll() {
 // ---------- UI state ----------
 let paints = [];
 let editingId = null;
+let currentPhotoDataUrl = "";
 
 // ---------- render ----------
 function matchesQuery(p, q) {
@@ -196,6 +239,7 @@ function render() {
       <div class="card__top">
         <div>
           <div class="titleRow">
+            ${p.photoDataUrl ? `<img class="photoPreview" src="${p.photoDataUrl}" alt="swatch" />` : ""}
             ${p.hex ? `<span class="swatch" style="background:${escapeHtml(p.hex)}"></span>` : ""}
             <h3 class="card__title">${escapeHtml(p.name || "")}</h3>
           </div>
@@ -255,6 +299,8 @@ function resetForm() {
   $("btnSave").textContent = "保存";
   $("hex").value = "";
   setHexPreview("");
+  currentPhotoDataUrl = "";
+  setPhotoPreview("");
 }
 
 function fillForm(p) {
@@ -274,6 +320,8 @@ function fillForm(p) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   $("hex").value = p.hex || "";
   setHexPreview(p.hex || "");
+  currentPhotoDataUrl = p.photoDataUrl || "";
+  setPhotoPreview(currentPhotoDataUrl);
 }
 
 function readForm() {
@@ -287,6 +335,7 @@ function readForm() {
     tags: normalizeTags($("tags").value),
     notes: $("notes").value.trim(),
     hex: normalizeHex($("hex").value),
+    photoDataUrl: currentPhotoDataUrl || "",
   };
 }
 
@@ -354,6 +403,7 @@ async function importJSON(file, mode) {
         createdAt: p.createdAt || nowISO(),
         updatedAt: p.updatedAt || nowISO(),
         hex: (normalizeHex(p.hex) === "__INVALID__") ? "" : (normalizeHex(p.hex) || ""),
+        photoDataUrl: typeof p.photoDataUrl === "string" ? p.photoDataUrl : "",
       };
 
       if (typeof clean.id === "number") {
@@ -461,5 +511,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("hex").addEventListener("input", () => {
     const h = normalizeHex($("hex").value);
     setHexPreview(h);
+    
+  $("btnTakePhoto").addEventListener("click", () => {
+  $("photoInput").click();
+  });
+
+  $("photoInput").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      const dataUrl = await fileToResizedDataURL(file, { maxSize: 900, quality: 0.82 });
+      currentPhotoDataUrl = dataUrl;
+      setPhotoPreview(currentPhotoDataUrl);
+    } catch (err) {
+      console.warn(err);
+      alert("画像の読み込みに失敗したかも。別の写真で試してね。");
+    }
+  });
+
+  $("btnRemovePhoto").addEventListener("click", () => {
+    const ok = confirm("塗り見本の写真を削除する？");
+    if (!ok) return;
+    currentPhotoDataUrl = "";
+    setPhotoPreview("");
+  });
   });
 });
