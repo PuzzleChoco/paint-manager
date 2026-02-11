@@ -71,18 +71,18 @@
           </label>
           
           <label class="span-2">
-              塗り見本（写真）
-              <div class="photoRow">
-                <button type="button" id="btnTakePhoto" class="btn btn--ghost">撮影/選択</button>
-                <button type="button" id="btnRemovePhoto" class="btn btn--danger" hidden>削除</button>
+            塗り見本（写真）
+            <div class="photoRow">
+               <button type="button" id="btnTakePhoto" class="btn btn--ghost">撮影/選択</button>
+               <button type="button" id="btnRemovePhoto" class="btn btn--danger" hidden>削除</button>
 
-                <input
+               <input
                   id="photoInput"
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  hidden
-                />
+                  style="display:none"
+               />
 
                 <img id="photoPreview" class="photoPreview" alt="swatch preview" hidden />
               </div>
