@@ -168,14 +168,61 @@
         まだ登録がないよ。上のフォームから追加してね。
       </div>
     </section>
+    
+   <section class="panel" id="palettesPanel">
+     <div class="panel__head">
+       <h2>パレット</h2>
 
-    <footer class="footer">
-      <small>
-        ヒント:iPhoneはSafariで開いて「共有」→「ホーム画面に追加」でアプリっぽく使えるよ。•⬜︎•
-      </small>
-    </footer>
-  </main>
+       <div class="paletteTop">
+         <div id="paletteTabs" class="paletteTabs"></div>
 
-  <script src="./app.js"></script>
-</body>
+         <button type="button" id="btnAddPalette" class="btn btn--ghost">＋新規</button>
+       </div>
+     </div>
+
+     <div id="paletteControls" class="paletteControls" hidden>
+       <input id="paletteName" class="paletteNameInput" placeholder="パレット名" />
+       <div class="slotControls">
+         <span class="muted">マス数</span>
+         <button type="button" class="btn btn--ghost" id="btnSlotsMinus">−</button>
+         <input id="paletteSlots" type="number" min="1" step="1" class="slotsInput" />
+         <button type="button" class="btn btn--ghost" id="btnSlotsPlus">＋</button>
+         <button type="button" class="btn btn--danger" id="btnDeletePalette">削除</button>
+       </div>
+     </div>
+
+     <div id="paletteGrid" class="paletteGrid" hidden></div>
+
+     <div id="paletteEmpty" class="empty" hidden>
+       まだパレットがないよ。「＋新規」から作ってね。
+     </div>
+   </section>
+
+   <!-- Paint picker modal -->
+   <div id="pickerBackdrop" class="modalBackdrop" hidden>
+     <div class="modal">
+       <div class="modal__head">
+         <h3>絵の具を選ぶ</h3>
+         <button type="button" id="btnClosePicker" class="btn btn--ghost">閉じる</button>
+       </div>
+
+       <input id="pickerQuery" class="pickerQuery" placeholder="検索（色名/メーカー/タグ/メモ）" />
+
+       <div id="pickerList" class="pickerList"></div>
+
+       <div class="modal__foot">
+         <button type="button" id="btnClearSlot" class="btn btn--danger">このマスを空にする</button>
+       </div>
+     </div>
+   </div>
+
+       <footer class="footer">
+         <small>
+           ヒント:iPhoneはSafariで開いて「共有」→「ホーム画面に追加」でアプリっぽく使えるよ。•⬜︎•
+         </small>
+       </footer>
+     </main>
+
+     <script src="./app.js"></script>
+   </body>
 </html>

@@ -102,10 +102,101 @@ function setPhotoName(name) {
   el.textContent = v;
 }
 
+async function getAllPalettes() {
+  return await getAllFrom(STORE_PALETTES);
+}
+
+async function addPalette({ name, slots }) {
+  const p = { name: name || "新しいパレット", slots: Math.max(1, Number(slots) || 13), createdAt: nowISO(), updatedAt: nowISO() };
+  return await withStoreName(STORE_PALETTES, "readwrite", (store) => store.add(p));
+}
+
+async function updatePalette(id, patch) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_PALETTES, "readwrite");
+    const store = tx.objectStore(STORE_PALETTES);
+    const req = store.get(id);
+    req.onsuccess = () => {
+      const cur = req.result;
+      if (!cur) return resolve(false);
+      const next = { ...cur, ...patch, id, updatedAt: nowISO() };
+      store.put(next);
+      resolve(true);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function deletePalette(id) {
+  // delete palette
+  await withStoreName(STORE_PALETTES, "readwrite", (store) => store.delete(id));
+  // delete its slots
+  const db = await openDB();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SLOTS, "readwrite");
+    const store = tx.objectStore(STORE_SLOTS);
+    const idx = store.index("paletteId");
+    const range = IDBKeyRange.only(id);
+    const cursorReq = idx.openCursor(range);
+    cursorReq.onsuccess = () => {
+      const cursor = cursorReq.result;
+      if (!cursor) return resolve();
+      cursor.delete();
+      cursor.continue();
+    };
+    cursorReq.onerror = () => reject(cursorReq.error);
+  });
+}
+
+async function getSlotsForPalette(paletteId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SLOTS, "readonly");
+    const store = tx.objectStore(STORE_SLOTS);
+    const idx = store.index("paletteId");
+    const req = idx.getAll(IDBKeyRange.only(paletteId));
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function setSlotPaint(paletteId, index, paintId) {
+  const rec = { paletteId, index, paintId: paintId ?? null, updatedAt: nowISO() };
+  await withStoreName(STORE_SLOTS, "readwrite", (store) => store.put(rec));
+}
+
+async function clearSlot(paletteId, index) {
+  await setSlotPaint(paletteId, index, null);
+}
+
+async function trimSlotsBeyond(paletteId, maxSlots) {
+  // remove records where index >= maxSlots
+  const db = await openDB();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SLOTS, "readwrite");
+    const store = tx.objectStore(STORE_SLOTS);
+    const idx = store.index("paletteId");
+    const cursorReq = idx.openCursor(IDBKeyRange.only(paletteId));
+    cursorReq.onsuccess = () => {
+      const cursor = cursorReq.result;
+      if (!cursor) return resolve();
+      const rec = cursor.value;
+      if (rec.index >= maxSlots) cursor.delete();
+      cursor.continue();
+    };
+    cursorReq.onerror = () => reject(cursorReq.error);
+  });
+}
+
 // ---------- IndexedDB ----------
 const DB_NAME = "paint-manager-db";
-const DB_VERSION = 1;
+
+const DB_VERSION = 2; // ★ 1 → 2 に
+
 const STORE = "paints";
+const STORE_PALETTES = "palettes";
+const STORE_SLOTS = "paletteSlots";
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -120,6 +211,19 @@ function openDB() {
         store.createIndex("name", "name", { unique: false });
         store.createIndex("brand", "brand", { unique: false });
         store.createIndex("status", "status", { unique: false });
+      }
+      
+      // palettes
+      if (!db.objectStoreNames.contains(STORE_PALETTES)) {
+        const ps = db.createObjectStore(STORE_PALETTES, { keyPath: "id", autoIncrement: true });
+        ps.createIndex("updatedAt", "updatedAt", { unique: false });
+        ps.createIndex("createdAt", "createdAt", { unique: false });
+      }
+
+      // paletteSlots: composite key [paletteId, index]
+      if (!db.objectStoreNames.contains(STORE_SLOTS)) {
+        const ss = db.createObjectStore(STORE_SLOTS, { keyPath: ["paletteId", "index"] });
+        ss.createIndex("paletteId", "paletteId", { unique: false });
       }
     };
 
@@ -138,6 +242,29 @@ async function withStore(mode, fn) {
     tx.oncomplete = () => resolve(out);
     tx.onerror = () => reject(tx.error);
     tx.onabort = () => reject(tx.error);
+  });
+}
+
+async function withStoreName(storeName, mode, fn) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, mode);
+    const store = tx.objectStore(storeName);
+    const out = fn(store);
+    tx.oncomplete = () => resolve(out);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+async function getAllFrom(storeName) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const store = tx.objectStore(storeName);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
   });
 }
 
@@ -193,6 +320,10 @@ let paints = [];
 let editingId = null;
 let currentPhotoDataUrl = "";
 let currentPhotoName = "";
+let palettes = [];
+let activePaletteId = null;
+let activePaletteSlots = []; // records from paletteSlots
+let pickingSlotIndex = null;
 
 // ---------- render ----------
 function matchesQuery(p, q) {
@@ -297,6 +428,135 @@ function render() {
     `;
 
     ul.appendChild(li);
+  }
+}
+
+function getActivePalette() {
+  return palettes.find(p => p.id === activePaletteId) || null;
+}
+
+function slotPaintId(index) {
+  const rec = activePaletteSlots.find(s => s.index === index);
+  return rec ? rec.paintId : null;
+}
+
+function paintById(id) {
+  return paints.find(p => p.id === id) || null;
+}
+
+function renderPalettesUI() {
+  const tabs = $("paletteTabs");
+  const grid = $("paletteGrid");
+  const empty = $("paletteEmpty");
+  const controls = $("paletteControls");
+
+  tabs.innerHTML = "";
+
+  if (!palettes.length) {
+    empty.hidden = false;
+    controls.hidden = true;
+    grid.hidden = true;
+    return;
+  }
+
+  empty.hidden = true;
+
+  for (const p of palettes) {
+    const el = document.createElement("div");
+    el.className = "paletteTab" + (p.id === activePaletteId ? " paletteTab--active" : "");
+    el.textContent = `${p.name || "パレット"} (${p.slots})`;
+    el.addEventListener("click", async () => {
+      activePaletteId = p.id;
+      activePaletteSlots = await getSlotsForPalette(activePaletteId);
+      renderPalettesUI();
+    });
+    tabs.appendChild(el);
+  }
+
+  const ap = getActivePalette();
+  if (!ap) return;
+
+  controls.hidden = false;
+  grid.hidden = false;
+
+  // Controls values
+  $("paletteName").value = ap.name || "";
+  $("paletteSlots").value = String(ap.slots ?? 13);
+
+  // Grid
+  grid.innerHTML = "";
+  for (let i = 0; i < ap.slots; i++) {
+    const pid = slotPaintId(i);
+    const p = pid ? paintById(pid) : null;
+
+    const slot = document.createElement("div");
+    slot.className = "slot";
+
+    const swatch =
+      p?.photoDataUrl
+        ? `<img class="slotSwatch" src="${p.photoDataUrl}" alt="swatch" />`
+        : (p?.hex && p.hex !== "__INVALID__"
+            ? `<div class="slotSwatch" style="background:${escapeHtml(p.hex)}"></div>`
+            : `<div class="slotSwatch"></div>`
+          );
+
+    slot.innerHTML = `
+      <div class="slotIndex">${i + 1}</div>
+      ${swatch}
+      <div class="slotName">${p ? escapeHtml(p.name || "") : "＋ 追加"}</div>
+      <div class="slotMeta">${p ? escapeHtml(p.brand || "") : ""}</div>
+    `;
+
+    slot.addEventListener("click", () => openPicker(i));
+    grid.appendChild(slot);
+  }
+}
+
+function openPicker(index) {
+  pickingSlotIndex = index;
+  $("pickerQuery").value = "";
+  $("pickerBackdrop").hidden = false;
+  renderPickerList();
+}
+
+function closePicker() {
+  $("pickerBackdrop").hidden = true;
+  pickingSlotIndex = null;
+}
+
+function renderPickerList() {
+  const q = $("pickerQuery").value.trim().toLowerCase();
+  const list = $("pickerList");
+  list.innerHTML = "";
+
+  const filtered = paints.filter(p => matchesQuery(p, q)); // 既存の matchesQuery を流用
+
+  for (const p of filtered) {
+    const item = document.createElement("div");
+    item.className = "pickerItem";
+
+    const thumb = p.photoDataUrl
+      ? `<img class="pickerSwatch" src="${p.photoDataUrl}" alt="swatch" />`
+      : (p.hex ? `<div class="pickerSwatch" style="background:${escapeHtml(p.hex)}"></div>` : `<div class="pickerSwatch"></div>`);
+
+    item.innerHTML = `
+      ${thumb}
+      <div>
+        <div class="pickerTitle">${escapeHtml(p.name || "")}</div>
+        <div class="pickerMeta">${escapeHtml(p.brand || "メーカー未設定")} / ${escapeHtml(typeLabel(p.type))}</div>
+      </div>
+    `;
+
+    item.addEventListener("click", async () => {
+      const ap = getActivePalette();
+      if (!ap || pickingSlotIndex == null) return;
+      await setSlotPaint(ap.id, pickingSlotIndex, p.id);
+      activePaletteSlots = await getSlotsForPalette(ap.id);
+      renderPalettesUI();
+      closePicker();
+    });
+
+    list.appendChild(item);
   }
 }
 
@@ -464,6 +724,31 @@ async function reload() {
   render();
 }
 
+async function reloadPalettes() {
+  palettes = await getAllPalettes();
+  // 初回：パレットがないなら初期パレット（13マス）を作る
+  if (palettes.length === 0) {
+    await addPalette({ name: "水彩パレット", slots: 13 });
+    palettes = await getAllPalettes();
+  }
+  if (!activePaletteId) activePaletteId = palettes[0]?.id ?? null;
+
+  // active palette slots
+  if (activePaletteId != null) {
+    activePaletteSlots = await getSlotsForPalette(activePaletteId);
+  } else {
+    activePaletteSlots = [];
+  }
+
+  renderPalettesUI();
+}
+
+async function reload() {
+  paints = await getAllPaints();
+  render();           // 既存の一覧
+  await reloadPalettes(); // ★追加
+}
+
 // ---------- event wiring ----------
 document.addEventListener("DOMContentLoaded", async () => {
   // Service Worker
@@ -598,5 +883,86 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (lib) lib.value = "";
     });
   }
+  
+  // Palette events
+  $("btnAddPalette").addEventListener("click", async () => {
+    const name = prompt("パレット名は？", "新しいパレット");
+    if (name == null) return;
+    await addPalette({ name: name.trim() || "新しいパレット", slots: 13 });
+    palettes = await getAllPalettes();
+    activePaletteId = palettes[palettes.length - 1]?.id ?? activePaletteId;
+    await reloadPalettes();
+  });
+
+  $("paletteName").addEventListener("change", async () => {
+    const ap = getActivePalette();
+    if (!ap) return;
+    await updatePalette(ap.id, { name: $("paletteName").value.trim() || "パレット" });
+    await reloadPalettes();
+  });
+
+  function setSlotsCount(next) {
+    const ap = getActivePalette();
+    if (!ap) return;
+    const v = Math.max(1, Number(next) || 1);
+    $("paletteSlots").value = String(v);
+  }
+
+  $("btnSlotsMinus").addEventListener("click", async () => {
+    const ap = getActivePalette();
+    if (!ap) return;
+    const next = Math.max(1, (Number($("paletteSlots").value) || ap.slots || 13) - 1);
+    setSlotsCount(next);
+    await updatePalette(ap.id, { slots: next });
+    await trimSlotsBeyond(ap.id, next);
+    await reloadPalettes();
+  });
+
+  $("btnSlotsPlus").addEventListener("click", async () => {
+    const ap = getActivePalette();
+    if (!ap) return;
+    const next = Math.max(1, (Number($("paletteSlots").value) || ap.slots || 13) + 1);
+    setSlotsCount(next);
+    await updatePalette(ap.id, { slots: next });
+    await reloadPalettes();
+  });
+
+  // "細かく変更"：数値入力で任意のマス数に
+  $("paletteSlots").addEventListener("change", async () => {
+    const ap = getActivePalette();
+    if (!ap) return;
+    const next = Math.max(1, Number($("paletteSlots").value) || ap.slots || 13);
+    setSlotsCount(next);
+    await updatePalette(ap.id, { slots: next });
+    await trimSlotsBeyond(ap.id, next);
+    await reloadPalettes();
+  });
+
+  $("btnDeletePalette").addEventListener("click", async () => {
+    const ap = getActivePalette();
+    if (!ap) return;
+    const ok = confirm(`「${ap.name || "パレット"}」を削除する？`);
+    if (!ok) return;
+    await deletePalette(ap.id);
+    palettes = await getAllPalettes();
+    activePaletteId = palettes[0]?.id ?? null;
+    await reloadPalettes();
+  });
+
+  // Picker events
+  $("btnClosePicker").addEventListener("click", closePicker);
+  $("pickerBackdrop").addEventListener("click", (e) => {
+    if (e.target === $("pickerBackdrop")) closePicker();
+  });
+  $("pickerQuery").addEventListener("input", renderPickerList);
+
+  $("btnClearSlot").addEventListener("click", async () => {
+    const ap = getActivePalette();
+    if (!ap || pickingSlotIndex == null) return;
+    await clearSlot(ap.id, pickingSlotIndex);
+    activePaletteSlots = await getSlotsForPalette(ap.id);
+    renderPalettesUI();
+    closePicker();
+  });
   
 });
