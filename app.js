@@ -965,4 +965,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     closePicker();
   });
   
+  // 起動時は必ず閉じておく（保険）
+  $("pickerBackdrop").hidden = true;  
+  
 });
