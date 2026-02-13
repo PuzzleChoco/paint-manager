@@ -41,7 +41,17 @@ body {
 
 .header__actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 
-.container { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding:
+    16px
+    calc(16px + env(safe-area-inset-right))
+    16px
+    calc(16px + env(safe-area-inset-left));
+  display: grid;
+  gap: 14px;
+}
 
 .panel {
   background: rgba(20,20,33,.86);
