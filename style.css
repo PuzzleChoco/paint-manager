@@ -23,8 +23,11 @@ body {
   top: 0;
   z-index: 10;
 
-  /* ここがポイント：iPhoneのノッチ/ステータスバー分だけ上に余白を足す */
-  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  padding:
+    calc(14px + env(safe-area-inset-top))
+    calc(16px + env(safe-area-inset-right))
+    14px
+    calc(16px + env(safe-area-inset-left));
 
   backdrop-filter: blur(10px);
   background: rgba(10,10,16,.72);
