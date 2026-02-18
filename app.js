@@ -965,6 +965,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     closePicker();
   });
   
+  function setView(view) {
+  const isPalette = view === "palette";
+  $("viewPalette").hidden = !isPalette;
+  $("viewList").hidden = isPalette;
+
+  $("tabPalette").classList.toggle("viewTab--active", isPalette);
+  $("tabList").classList.toggle("viewTab--active", !isPalette);
+
+  // パレット以外にいる時は、開いてしまったモーダルを強制で閉じる（事故防止）
+  if (!isPalette) {
+    const bd = $("pickerBackdrop");
+    if (bd) bd.hidden = true;
+  }
+
+  localStorage.setItem("paintManager:view", view);
+  }
+
+  // 初期表示：前回のタブを復元（なければパレット）
+  const saved = localStorage.getItem("paintManager:view") || "palette";
+  setView(saved);
+
+  $("tabPalette").addEventListener("click", () => setView("palette"));
+  $("tabList").addEventListener("click", () => setView("list"));
+  
   // 起動時は必ず閉じておく（保険）
   $("pickerBackdrop").hidden = true;  
   

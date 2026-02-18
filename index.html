@@ -33,8 +33,15 @@
       </label>
     </div>
   </header>
+  
+  <nav class="viewTabs" id="viewTabs">
+    <button type="button" class="viewTab viewTab--active" id="tabPalette" data-view="palette">パレット</button>
+    <button type="button" class="viewTab" id="tabList" data-view="list">一覧</button>
+  </nav>
 
   <main class="container">
+  
+    <div id="viewList" hidden>
     <section class="panel">
       <h2>追加 / 編集</h2>
 
@@ -168,7 +175,9 @@
         まだ登録がないよ。上のフォームから追加してね。
       </div>
     </section>
-    
+    </div>
+   
+   <div id="viewPalette">
    <section class="panel" id="palettesPanel">
      <div class="panel__head">
        <h2>パレット</h2>
@@ -197,6 +206,7 @@
        まだパレットがないよ。「＋新規」から作ってね。
      </div>
    </section>
+   
 
    <!-- Paint picker modal -->
    <div id="pickerBackdrop" class="modalBackdrop" hidden>
@@ -214,6 +224,7 @@
          <button type="button" id="btnClearSlot" class="btn btn--danger">このマスを空にする</button>
        </div>
      </div>
+   </div>
    </div>
 
        <footer class="footer">

@@ -367,4 +367,36 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
   display: none !important; 
 }
 
+.viewTabs {
+  position: sticky;
+  top: 0; /* ヘッダーがstickyなら、このnavはヘッダー直下に置く想定 */
+  z-index: 9;
+  display: flex;
+  gap: 10px;
+  padding:
+    10px
+    calc(16px + env(safe-area-inset-right))
+    10px
+    calc(16px + env(safe-area-inset-left));
+  background: rgba(10,10,16,.60);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.viewTab {
+  flex: 1 1 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.viewTab--active {
+  border-color: rgba(91,214,255,.45);
+  color: rgba(91,214,255,.95);
+  background: rgba(91,214,255,.10);
+}
 
