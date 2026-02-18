@@ -62,6 +62,7 @@ body {
   border-radius: 14px;
   box-shadow: var(--shadow);
   padding: 14px;
+  overflow: hidden;
 }
 
 .panel__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -238,7 +239,21 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
 
 /* --- Palette --- */
 .paletteTop { display: flex; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
-.paletteTabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+
+.paletteTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+
+  flex: 1 1 auto; /* ★ 伸び縮みOKに */
+  min-width: 0;   /* ★ これが重要：中身が多くても縮めてスクロールさせる */
+}
+
+#btnAddPalette {
+  flex: 0 0 auto;
+}
+
 .paletteTab {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -248,6 +263,11 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
+  
+  flex: 0 0 auto;
+  max-width: 220px;      /* 好みで調整 */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .paletteTab--active {
   border-color: rgba(91,214,255,.45);
@@ -346,3 +366,5 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
 [hidden] { 
   display: none !important; 
 }
+
+
