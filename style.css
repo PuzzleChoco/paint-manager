@@ -439,3 +439,27 @@ html, body { overflow-x: hidden; }
 }
 
 .viewTabs { max-width: 100%; }
+
+/* --- Fix: panel__head内のflexアイテムが中身幅で踏ん張って横に溢れるのを防ぐ --- */
+#palettesPanel .panel__head {
+  min-width: 0;
+}
+
+#palettesPanel .panel__head > * {
+  min-width: 0;      /* ★これが超重要 */
+  max-width: 100%;
+}
+
+/* paletteTop は "1行まるごと使う" 前提にして安定させる */
+#palettesPanel .paletteTop {
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* タブ領域も念のため幅上限を固定 */
+#palettesPanel .paletteTabs {
+  max-width: 100%;
+}
+
+
