@@ -462,4 +462,33 @@ html, body { overflow-x: hidden; }
   max-width: 100%;
 }
 
+/* --- Fix: paletteTabs が親幅を押し広げないようにする（iOS flex対策） --- */
+#palettesPanel .paletteTop{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-width:0;
+}
+
+#palettesPanel .paletteTabs{
+  flex: 1 1 0;      /* ★ flex-basis を 0 にして「中身幅」を最小幅にしない */
+  min-width:0;      /* ★ これも必須 */
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+
+#palettesPanel #btnAddPalette{
+  flex: 0 0 auto;   /* ボタンは縮まない */
+}
+
+#palettesPanel .paletteTab{
+  flex: 0 0 auto;   /* タブは自分の幅で横スクロール */
+  max-width: 240px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
 
