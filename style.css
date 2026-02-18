@@ -400,3 +400,25 @@ input:focus, select:focus, textarea:focus { border-color: rgba(91,214,255,.8); b
   background: rgba(91,214,255,.10);
 }
 
+/* パレットタブが増えても親幅を押し広げないための必須セット */
+.paletteTop {
+  width: 100%;
+  min-width: 0;
+}
+
+.paletteTabs {
+  flex: 1 1 auto;
+  min-width: 0;          /* ★これが一番重要 */
+  overflow-x: auto;
+}
+
+.paletteTab {
+  flex: 0 0 auto;
+}
+
+#btnAddPalette {
+  flex: 0 0 auto;
+}
+
+html, body { overflow-x: hidden; }
+
