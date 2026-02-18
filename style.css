@@ -436,9 +436,4 @@ html, body { overflow-x: hidden; }
 #palettesPanel .paletteTop {
   flex: 1 1 100%;
   max-width: 100%;
-}
-
-#palettesPanel .paletteTabs {
-  max-width: 100%;
-}
 
