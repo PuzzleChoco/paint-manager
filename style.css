@@ -495,4 +495,13 @@ html, body { overflow-x: hidden; }
   white-space:nowrap;
 }
 
+html, body {
+  background: #0b0b12; /* ←アプリ本体の背景と同じ色に */
+  min-height: 100%;
+}
+
+body {
+  /* iOSの下部セーフエリア分も背景が続くようにする */
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
