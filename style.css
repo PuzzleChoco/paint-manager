@@ -54,6 +54,9 @@ body {
     calc(16px + env(safe-area-inset-left));
   display: grid;
   gap: 14px;
+
+  /* ★追加：暗黙の auto 列が広がるのを止める */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .panel {
@@ -63,6 +66,7 @@ body {
   box-shadow: var(--shadow);
   padding: 14px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
